@@ -30,7 +30,8 @@
       "Bash(echo:*)",
       "Bash(git -C \"D:\\\\claude\\\\NamePlateMarkerWheel\" diff --stat)",
       "Bash(git -C \"D:\\\\claude\\\\NamePlateMarkerWheel\" status --short)",
-      "Bash(git -C:*)"
+      "Bash(git -C:*)",
+      "mcp__ide__executeCode"
     ]
   },
   "enabledPlugins": {
