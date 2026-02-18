@@ -1,0 +1,44 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(git clone:*)",
+      "Bash(wc -l:*)",
+      "Bash(cmd //c \"dir \"\"F:\\\\World of Warcraft\\\\_retail_\\\\Interface\\\\AddOns\"\" | findstr NamePlate\")",
+      "Bash(cmd //c \"dir F:\\\\World~1\\\\_retail_\\\\Interface\\\\AddOns\"\")",
+      "Bash(cmd //c 'dir \"\"F:\\\\World of Warcraft\\\\_retail_\\\\Interface\\\\AddOns\"\"')",
+      "Bash(cmd //c 'mklink /J \"\"F:\\\\World of Warcraft\\\\_retail_\\\\Interface\\\\AddOns\\\\NamePlateMarkerWheel\"\" \"\"D:\\\\claude\\\\NamePlateMarkerWheel\\\\src\"\"')",
+      "Bash(powershell -Command:*)",
+      "Bash(\"/d/claude/NamePlateMarkerWheel/src/Events.lua\":*)",
+      "Bash(\"/d/claude/NamePlateMarkerWheel/src/WheelUI.lua\":*)",
+      "Bash(start Wow.exe -console)",
+      "Bash(/d/claude/NamePlateMarkerWheel/sync-to-wow.bat)",
+      "Bash(bash sync.sh)",
+      "Bash(cd:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  },
+  "enabledPlugins": {
+    "engineering-skills@alirezarezvani-skills": true,
+    "product-skills@alirezarezvani-skills": true,
+    "pm-skills@alirezarezvani-skills": true,
+    "engineering-workflow-skills@mhattingpete-skills": true,
+    "productivity-skills@mhattingpete-skills": true
+  },
+  "extraKnownMarketplaces": {
+    "alirezarezvani-skills": {
+      "source": {
+        "source": "directory",
+        "path": "C:/Users/59773/.claude/skills/alirezarezvani-skills"
+      }
+    },
+    "mhattingpete-skills": {
+      "source": {
+        "source": "directory",
+        "path": "C:/Users/59773/.claude/skills/mhattingpete-marketplace"
+      }
+    }
+  }
+}

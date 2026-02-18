@@ -1,0 +1,39 @@
+# wow-sync Skill
+# 将 NamePlateMarkerWheel 插件代码同步到魔兽世界目录
+
+name: wow-sync
+description: |
+  将 NamePlateMarkerWheel 插件代码从 src/ 同步到魔兽世界插件目录。
+
+  使用方法:
+    - 直接说 "sync" 或 "同步到游戏"
+    - 或调用: skill: wow-sync
+
+  配置:
+    - 源目录: D:\claude\NamePlateMarkerWheel\src
+    - 目标目录: F:\World of Warcraft\_retail_\Interface\AddOns\NamePlateMarkerWheel
+
+invocation_phrases:
+  - "sync"
+  - "同步"
+  - "同步到游戏"
+  - "sync to wow"
+  - "更新插件"
+
+action: |
+  执行以下命令将 src/ 目录下的所有 .lua 和 .toc 文件同步到 WoW 插件目录：
+
+  Windows CMD: sync-to-wow.bat
+  Git Bash: bash sync.sh
+
+  或者使用 Bash 工具执行：
+  SRC="/d/claude/NamePlateMarkerWheel/src"
+  DEST="/f/World of Warcraft/_retail_/Interface/AddOns/NamePlateMarkerWheel"
+  mkdir -p "$DEST"
+  cp -v "$SRC"/*.lua "$DEST/"
+  cp -v "$SRC"/*.toc "$DEST/"
+
+post_edit_hook: |
+  当用户编辑 src/ 目录下的 .lua 或 .toc 文件后，
+  询问: "代码已更新，是否立即同步到魔兽世界插件目录？"
+  如果用户确认，则自动执行同步。
