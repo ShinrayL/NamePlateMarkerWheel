@@ -1,6 +1,6 @@
 ## Interface: 120000,120001
 ## Title: Name Plate Marker Wheel
-## Notes: Double-click nameplate to open a radial wheel for quick raid marker assignment
+## Notes: Double-click or Alt+click nameplate to open a radial wheel for quick raid marker assignment
 ## Author: Claude
 ## Version: 1.0.0
 ## SavedVariables: NamePlateMarkerWheelDB
