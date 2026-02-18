@@ -27,7 +27,10 @@
       "Bash(findstr:*)",
       "Bash(gh auth login:*)",
       "Bash(gh repo view:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(git -C \"D:\\\\claude\\\\NamePlateMarkerWheel\" diff --stat)",
+      "Bash(git -C \"D:\\\\claude\\\\NamePlateMarkerWheel\" status --short)",
+      "Bash(git -C:*)"
     ]
   },
   "enabledPlugins": {

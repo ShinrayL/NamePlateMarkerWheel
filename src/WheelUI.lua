@@ -7,7 +7,7 @@ local _, NPW = ...
 function NPW:CreateWheelFrame()
     -- 轮盘主框架（直接创建在UIParent上）
     local frame = CreateFrame("Frame", "NPW_WheelFrame", UIParent, "BackdropTemplate")
-    frame:SetSize(300, 300)
+    frame:SetSize(self.db.appearance.outLineRadius, self.db.appearance.outLineRadius)
     frame:SetPoint("CENTER")
     frame:SetFrameStrata("DIALOG")
     frame:SetFrameLevel(100)

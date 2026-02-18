@@ -8,6 +8,7 @@
 
 ### P0 - 核心功能
 - ✅ Alt+点击唤出轮盘 (`Events.lua`) - **已修复，可正常唤出**
+- ✅ 双击唤出轮盘 (`Events.lua`) - **已实现，300ms 内双击同一目标**
 - ✅ 径向轮盘UI (`WheelUI.lua`) - **显示正常**
 - ✅ 标记设置功能 (`WheelUI.lua`, `SecureActionButtonTemplate`) - **已修复，按钮点击可设置标记**
 - ✅ 测试命令 `/npw test` 可正常唤出轮盘
@@ -78,14 +79,17 @@
 
 ## 关键实现细节
 
-### Alt+点击触发
-- 方式: WorldFrame HookScript OnMouseDown + Alt键检测
-- 位置: `Events.lua` 第60-110行
+### 唤出轮盘触发方式（双击 + Alt+点击）
+- 方式: WorldFrame HookScript OnMouseDown + 双击检测/Alt键检测
+- 位置: `Events.lua` 第53-108行
 - 流程:
   1. 钩住 WorldFrame 的 OnMouseDown 事件
-  2. 检测是否按住 Alt 键 (`IsAltKeyDown()`)
+  2. 检测触发条件：
+     - **双击**: 同一目标，两次点击间隔 <= 300ms
+     - **Alt+点击**: 按住 Alt 键点击
   3. 获取目标 GUID (`UnitGUID("target")`)
   4. 调用 `ShowWheel()` 显示轮盘（传递GUID）
+- 双击阈值: `DOUBLE_CLICK_THRESHOLD = 300` (毫秒)
 
 ### 安全按钮
 - 使用 `SecureActionButtonTemplate` 直接创建视觉按钮
@@ -134,6 +138,22 @@
 - `WheelUI.lua:CreateMarkButton()` - 使用 `SecureActionButtonTemplate` 创建按钮
 - `WheelUI.lua:CreateClearButton()` - 使用 `SecureActionButtonTemplate` 创建按钮
 - `WheelUI.lua` - 主框架 `EnableMouse(false)` 避免拦截点击
+
+### 2026-02-19 - 双击 + Alt+点击双重触发支持
+
+**需求**: 同时支持双击和 Alt+点击两种方式唤出轮盘
+
+**实现逻辑**:
+- 双击检测：两次点击同一目标且时间间隔 <= 500ms
+- Alt+点击：按住 Alt 键点击目标
+- 两种方式独立，满足任一条件即可唤出轮盘
+
+**变更文件**:
+- `Core.lua` - state 中使用 `lastClickGUID` 替代 `lastClickUnit`，双击阈值 500ms
+- `Events.lua:OnWorldFrameMouseDown()` - 重构点击检测逻辑
+- `Events.lua:ProcessClick()` - 新增，统一处理点击检测
+- `Events.lua:ResetClickState()` - 新增，重置点击状态
+- 清理 Events.lua 和 Core.lua 中的调试输出
 
 ### 2026-02-19 - GUID 识别重构
 

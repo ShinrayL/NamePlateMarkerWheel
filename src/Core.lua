@@ -14,15 +14,15 @@ NPW.state = {
     currentGUID = nil, -- 当前目标的 GUID（主要标识）
     wheelFrame = nil,
     wheelOverlay = nil,
-    lastClickTime = 0,
-    lastClickUnit = nil,
+    lastClickTime = 0,      -- 上次点击时间（毫秒）
+    lastClickGUID = nil,    -- 上次点击目标的 GUID（用于双击检测）
     secureButtons = {},
 }
 
 -- 常量定义
 NPW.constants = {
     NUM_MARKS = 8,
-    DOUBLE_CLICK_THRESHOLD = 300, -- 毫秒
+    DOUBLE_CLICK_THRESHOLD = 500, -- 毫秒（双击时间阈值）
     DEFAULT_RADIUS = 100,
     DEFAULT_ICON_SIZE = 32,
 }
@@ -35,7 +35,6 @@ function NPW:OnInitialize()
     self:CreateWheelFrame()
     -- 注册斜杠命令
     self:RegisterSlashCommands()
-    self:Debug("Core initialized")
 end
 
 -- 插件启用

@@ -7,11 +7,12 @@ local _, NPW = ...
 NPW.defaults = {
     -- 外观设置
     appearance = {
-        wheelRadius = 60,          -- 轮盘半径
-        iconSize = 48,              -- 图标大小
+        outLineRadius=100,          --外盘半径
+        wheelRadius = 25,          -- 轮盘半径
+        iconSize = 30,              -- 图标大小
         opacity = 0.8,              -- 不透明度
         borderSize = 2,             -- 边框大小
-        centerButtonSize = 48,      -- 中心按钮大小
+        centerButtonSize = 30,      -- 中心按钮大小
     },
 
     -- 行为设置
