@@ -69,14 +69,11 @@ function NPW:UpdateSecureButtonMacros(unit, guid)
     end
 end
 
--- 插件加载完成
-print("|cff00ffff[NPW]|r 插件文件已加载，等待 PLAYER_LOGIN...")
-
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("PLAYER_LOGIN")
 initFrame:SetScript("OnEvent", function()
-    print("|cff00ffff[NPW]|r PLAYER_LOGIN 事件触发，开始初始化...")
+ 
     NPW:OnInitialize()
     NPW:OnEnable()
-    print("|cff00ffff[NPW]|r 初始化完成！")
+  
 end)

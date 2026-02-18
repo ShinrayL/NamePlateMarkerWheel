@@ -9,31 +9,15 @@ function NPW:RegisterSlashCommands()
             -- 测试命令：在屏幕中央显示轮盘（对自己使用player的GUID）
             local playerGUID = UnitGUID("player")
             self:ShowWheel(GetScreenWidth() / 2, GetScreenHeight() / 2, playerGUID)
-            print("|cff00ffff[NPW]|r 测试轮盘已显示")
+        
         elseif cmd == "reset" then
             -- 重置配置
             self:ResetConfig()
-            print("|cff00ffff[NPW]|r 配置已重置，请重载界面 (/reload)")
-        elseif cmd == "te" then
-            if UnitExists("target") then
-                local name, realm = UnitName("target")
-                local guid = UnitGUID("target")
-                local tokenFromGUID = guid and UnitTokenFromGUID(guid) or nil
-                print("You're targeting a", name, realm and ("-" .. realm) or "")
-                print("  GUID:", guid or "nil")
-                print("  UnitTokenFromGUID:", tokenFromGUID or "nil")
-                print("  Current unit token:", UnitExists("target") and "target" or "nil")
-            else
-                print("You have no target")
-            end
         elseif cmd == "tar" then
             -- 使用当前目标的GUID来测试
             if UnitExists("target") then
                 local guid = UnitGUID("target")
                 self:ShowWheel(GetScreenWidth() / 2, GetScreenHeight() / 2, guid)
-                print("|cff00ffff[NPW]|r 测试轮盘已显示")
-            else
-                print("|cff00ffff[NPW]|r 请先选择一个目标")
             end
         elseif cmd == "config" or cmd == "c" then
             -- 打开配置界面（如果支持）
@@ -63,7 +47,6 @@ function NPW:RegisterSlashCommands()
         else
             print("|cff00ffff[NPW]|r 命令列表:")
             print("  /npw test - 测试轮盘显示")
-            print("  /npw te - aray测试语句")
             print("  /npw tar - 测试目标展示轮盘")
             print("  /npw reset - 重置配置")
             print("  /npw config - 打开配置")

@@ -33,7 +33,7 @@ function NPW:CreateWheelFrame()
     frame.clearButton = self:CreateClearButton(frame)
 
     self.state.wheelFrame = frame
-    self:Debug("Wheel frame created")
+ 
     return frame
 end
 
@@ -50,12 +50,12 @@ function NPW:CreateMarkButton(parent, index)
 
     -- 调试用：确认点击事件
     btn:SetScript("OnMouseDown", function(self, button)
-        NPW:Debug("OnMouseDown Button " .. index .. " with " .. button)
+      
     end)
 
     -- 调试用：点击前检查宏设置
     btn:SetScript("PreClick", function(self, button)
-        NPW:Debug("PreClick Button " .. index .. ": type=" .. tostring(self:GetAttribute("type")) .. ", macro=" .. tostring(self:GetAttribute("macrotext")))
+       
     end)
 
     -- 计算位置
@@ -137,7 +137,7 @@ function NPW:CreateClearButton(parent)
 
     -- 调试用：点击前检查宏设置
     btn:SetScript("PreClick", function(self, button)
-        NPW:Debug("PreClick ClearButton: type=" .. tostring(self:GetAttribute("type")) .. ", macro=" .. tostring(self:GetAttribute("macrotext")))
+     
     end)
 
     -- 悬停效果
@@ -271,12 +271,6 @@ function NPW:RegisterWheelCloseHandlers()
     end)
 end
 
--- 注：PositionSecureButtons 不再需要
--- 安全按钮已直接集成到视觉按钮中，位置在创建时已设置
-function NPW:PositionSecureButtons()
-    -- 此函数保留用于向后兼容，不再执行任何操作
-    self:Debug("PositionSecureButtons deprecated - buttons are now integrated")
-end
 
 -- 隐藏轮盘
 function NPW:HideWheel()
@@ -298,14 +292,6 @@ function NPW:HideWheel()
         end
     end
 
-    -- 注：安全按钮现在集成在视觉按钮中，会随着 frame:Hide() 自动隐藏
-
-    self:Debug("Wheel hidden")
-
-    -- 播放音效
-    if self.db.behavior.enableSound then
-        PlaySound(SOUNDKIT.IG_MAINMENU_CLOSE)
-    end
 end
 
 -- 更新当前标记高亮
@@ -361,8 +347,6 @@ function NPW:UpdateWheelLayout()
     if frame.clearButton then
         frame.clearButton:SetSize(self.db.appearance.centerButtonSize, self.db.appearance.centerButtonSize)
     end
-
-    self:Debug("Wheel layout updated")
 end
 
 -- 检查轮盘是否可见

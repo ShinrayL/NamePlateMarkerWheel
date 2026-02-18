@@ -7,18 +7,18 @@ local _, NPW = ...
 NPW.defaults = {
     -- 外观设置
     appearance = {
-        wheelRadius = 100,          -- 轮盘半径
-        iconSize = 32,              -- 图标大小
+        wheelRadius = 60,          -- 轮盘半径
+        iconSize = 48,              -- 图标大小
         opacity = 0.8,              -- 不透明度
         borderSize = 2,             -- 边框大小
-        centerButtonSize = 40,      -- 中心按钮大小
+        centerButtonSize = 48,      -- 中心按钮大小
     },
 
     -- 行为设置
     behavior = {
         doubleClickInterval = 300,  -- 双击间隔(毫秒)
         animationSpeed = 200,       -- 动画速度(毫秒)
-        enableSound = true,         -- 启用音效
+        enableSound = false,         -- 启用音效
         closeOnMarkSet = true,      -- 设置标记后关闭
     },
 
@@ -44,20 +44,20 @@ function NPW:InitConfig()
     -- 保存引用到全局以便持久化
     NamePlateMarkerWheelDB.profile = self.db
 
-    self:Debug("Config initialized")
+
 end
 
 -- 保存配置
 function NPW:SaveConfig()
     NamePlateMarkerWheelDB.profile = self.db
-    self:Debug("Config saved")
+  
 end
 
 -- 重置配置
 function NPW:ResetConfig()
     self.db = self:DeepCopy(self.defaults)
     NamePlateMarkerWheelDB.profile = self.db
-    self:Debug("Config reset")
+ 
 end
 
 -- 获取配置值

@@ -46,12 +46,8 @@ function NPW:HookWorldFrame()
             end
         end)
     end)
-
     if success then
         self.worldFrameHooked = true
-        self:Debug("WorldFrame hooked successfully")
-    else
-        self:Debug("Failed to hook WorldFrame")
     end
 end
 
@@ -101,8 +97,6 @@ function NPW:OnWorldFrameMouseDownDelayed()
 
     local targetName = UnitName("target")
     local targetGUID = UnitGUID("target")
-
-    print("|cff00ffff[NPW]|r *** ALT+CLICK (delayed) on: " .. (targetName or "unknown") .. " ***)")
 
     local x, y = GetCursorPosition()
     local scale = UIParent:GetEffectiveScale()

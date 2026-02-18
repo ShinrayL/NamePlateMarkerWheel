@@ -25,7 +25,9 @@
       "Bash(gh repo create:*)",
       "Bash(git remote add:*)",
       "Bash(findstr:*)",
-      "Bash(gh auth login:*)"
+      "Bash(gh auth login:*)",
+      "Bash(gh repo view:*)",
+      "Bash(echo:*)"
     ]
   },
   "enabledPlugins": {

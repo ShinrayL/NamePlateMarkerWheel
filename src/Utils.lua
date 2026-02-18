@@ -11,7 +11,7 @@ NPW.MARKERS = {
     { index = 4, name = "三角", icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_4" },
     { index = 5, name = "月亮", icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_5" },
     { index = 6, name = "方块", icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_6" },
-    { index = 7, name = "叉叉", icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_7" },
+    { index = 7, name = "红叉", icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_7" },
     { index = 8, name = "骷髅", icon = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_8" },
 }
 
