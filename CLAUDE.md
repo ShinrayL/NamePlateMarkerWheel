@@ -24,16 +24,21 @@
 - ✅ 斜杠命令 (`/npw`, `/npw test`, `/npw debug`, `/npw tar`)
 - ✅ SavedVariables 持久化
 
+### 已完成 (P3 - 高级功能)
+- ✅ 标记同步高亮显示 - **已实现，使用 GetRaidTargetIndex 高亮当前标记**
+
 ### 待完成 (P3 - 高级功能)
-- ⏳ 标记同步高亮显示
 - ⏳ 打开/关闭动画
 - ⏳ 音效反馈
 - ⏳ 图形化配置界面
 
+### 已完成 (测试)
+- ✅ 修复 `/npw tar` 命令无法唤出轮盘的问题
+- ✅ 修复已标记目标无法重新唤出轮盘的问题
+- ✅ 游戏内完整测试验证 - **核心功能验证通过**
+
 ### 待完成 (测试)
-- ⏳ 修复 `/npw tar` 命令无法唤出轮盘的问题
 - ⏳ 单元测试文件
-- ⏳ 游戏内完整测试验证
 
 ## 项目结构
 
@@ -113,7 +118,9 @@
 | 双击检测不工作 | `Events.lua` | 方案改为 Alt+点击，WorldFrame OnMouseDown 检测 | 已修复 |
 | Alt+点击轮盘不显示 | `Events.lua` | 移除姓名板强制检查，允许无姓名板时唤出 | 已修复 |
 | 标记按钮点击无效 | `WheelUI.lua`, `Core.lua` | 安全按钮与视觉按钮合并，使用 `LeftButtonDown` 注册点击 | 已修复 |
-| `/npw tar` 命令无效 | `Register.lua` | 添加详细调试，排查 GUID 获取问题 | 调试中 |
+| `/npw tar` 命令无效 | `Core.lua`, `WheelUI.lua` | 简化 `GetUnitFromGUID` 直接返回 "target"，修复循环中按钮更新问题 | 已修复 |
+| 已标记目标无法唤出轮盘 | `WheelUI.lua` | 修复 `UpdateCurrentMarkHighlight` 中 `GetRaidTargetIndex` 错误处理，添加 `pcall` 保护 | 已修复 |
+| 循环只执行一次 | `Core.lua` | 移除了 `SetAttribute("npw-guid")` 的无效属性设置，该设置会导致 Lua 错误中断循环 | 已修复 |
 
 ## 架构变更记录
 
@@ -206,13 +213,37 @@ bash sync.sh
 - [x] **架构重构** - 安全按钮与视觉按钮合并 (2026-02-18)
 - [x] **GUID 识别重构** - 使用 GUID 作为主要标识 (2026-02-19)
 - [x] **修复标记按钮点击功能** - 已修复
-- [ ] **修复 `/npw tar` 命令** - 日志显示执行到 `ShowWheel` 后无输出
-- [ ] 实现标记同步高亮
+- [x] **修复 `/npw tar` 命令** - 已修复，简化 GetUnitFromGUID 逻辑
+- [x] **修复已标记目标无法唤出轮盘** - 已修复，添加 GetRaidTargetIndex 错误处理
+- [x] **修复循环只执行一次的问题** - 已修复，移除无效 SetAttribute 调用
 - [ ] 添加打开/关闭动画
 - [ ] 实现音效反馈
 - [ ] 创建配置界面
 - [ ] 编写单元测试
-- [ ] 游戏内完整测试验证
+- [x] **游戏内完整测试验证** - P0功能验证通过
+
+## 今日完成 (2026-02-19)
+
+### 修复的问题
+1. **`/npw tar` 命令无法唤出轮盘**
+   - 原因: `GetUnitFromGUID` 中 `UnitTokenFromGUID` 调用可能导致错误
+   - 解决: 简化逻辑，直接返回 "target" 作为 unit token
+
+2. **标记按钮只更新第一个**
+   - 原因: `SetAttribute("npw-guid", ...)` 使用自定义属性导致 Lua 错误中断循环
+   - 解决: 移除了不必要的自定义属性设置
+
+3. **已标记目标无法重新唤出轮盘**
+   - 原因: `UpdateCurrentMarkHighlight` 中 `GetRaidTargetIndex` 在某些情况下会出错
+   - 解决: 添加 `pcall` 错误保护，防止函数中断
+
+### 当前状态
+- ✅ Alt+点击唤出轮盘: **工作正常**
+- ✅ 8个标记按钮设置: **工作正常**
+- ✅ 中心清除按钮: **工作正常**
+- ✅ ESC键关闭轮盘: **工作正常**
+- ✅ 已标记目标重新标记: **工作正常**
+- ✅ 标记同步高亮: **已实现**
 
 ## 调试记录
 
@@ -225,8 +256,26 @@ bash sync.sh
 ### 2026-02-19 - 修复 `/npw tar` 命令
 
 **问题**: 命令执行后无轮盘显示
-**调试**:
-1. 添加模块级 `Log()` 函数区分日志来源
-2. 发现执行到 `ShowWheel()` 后无输出
-3. 怀疑 `guid:sub()` 调用出错，改为 `string.sub()`
-**状态**: 调试中，等待进一步日志
+**原因**: `GetUnitFromGUID` 中 `UnitTokenFromGUID` 调用在某些情况下会导致错误，中断执行流程
+**解决**: 简化 `GetUnitFromGUID` 直接返回 "target"
+
+### 2026-02-19 - 修复循环只执行一次
+
+**问题**: `UpdateSecureButtonMacros` 循环只更新第一个按钮
+**原因**: `SetAttribute("npw-guid", ...)` 尝试设置自定义属性，但 SecureActionButtonTemplate 不支持任意属性名
+**解决**: 移除了自定义属性设置，只保留必要的 `macrotext` 属性
+
+### 2026-02-19 - 修复已标记目标无法唤出轮盘
+
+**问题**: 对已标记目标 Alt+点击无反应
+**原因**: `UpdateCurrentMarkHighlight` 中 `GetRaidTargetIndex` 在某些情况下会出错，导致函数中断
+**解决**: 使用 `pcall` 包裹 `GetRaidTargetIndex` 调用，添加错误保护
+
+### 2026-02-19 - 调试记录总结
+
+通过添加详细的 `print` 调试输出，定位到以下关键问题：
+1. `ShowWheel` 调用后无输出 → 发现 `GetUnitFromGUID` 中的 API 调用问题
+2. `UpdateSecureButtonMacros` 循环中断 → 发现 `SetAttribute` 无效属性错误
+3. `UpdateCurrentMarkHighlight` 函数中断 → 发现 `GetRaidTargetIndex` 错误
+
+**调试技巧**: 在 WoW 插件开发中，使用 `pcall` 包裹可能出错的 API 调用可以有效防止函数中断。
