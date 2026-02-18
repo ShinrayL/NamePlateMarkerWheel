@@ -20,7 +20,12 @@
       "Bash(git commit:*)",
       "Bash(git config:*)",
       "Bash(.\\\\sync.bat:*)",
-      "Bash(powershell -ExecutionPolicy Bypass -File sync-simple.ps1)"
+      "Bash(powershell -ExecutionPolicy Bypass -File sync-simple.ps1)",
+      "Bash(git push:*)",
+      "Bash(gh repo create:*)",
+      "Bash(git remote add:*)",
+      "Bash(findstr:*)",
+      "Bash(gh auth login:*)"
     ]
   },
   "enabledPlugins": {
