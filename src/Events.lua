@@ -70,7 +70,6 @@ function NPW:OnWorldFrameMouseDown()
     -- 获取目标名称和GUID（GUID是最可靠的标识）
     local targetName = UnitName("target")
     local targetGUID = UnitGUID("target")
-    print("TARGET1：".. (targetName or "unknown"))
     if not targetName or not targetGUID then
         -- 目标存在但无法获取信息，延迟处理
         C_Timer.After(0.05, function()
@@ -78,16 +77,6 @@ function NPW:OnWorldFrameMouseDown()
         end)
         return
     end
-
-    -- 可选：检查目标是否有姓名板显示（仅用于调试，不阻止唤出）
-    local namePlate = C_NamePlate.GetNamePlateForUnit("target")
-    if namePlate then
-        self:Debug("Nameplate found for target")
-    else
-        self:Debug("Nameplate not found, but allowing wheel anyway")
-    end
-
-    print("|cff00ffff[NPW]|r *** ALT+CLICK on: " .. targetName .. " ***)")
 
     -- 获取鼠标位置
     local x, y = GetCursorPosition()

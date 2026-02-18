@@ -169,32 +169,19 @@ end
 -- @param x, y: 屏幕坐标
 -- @param guid: 目标单位的 GUID（主要标识）
 function NPW:ShowWheel(x, y, guid)
-    print("|cff00ffff[NPW]|r ShowWheel START")
     local frame = self.state.wheelFrame
-    if not frame then
-        print("|cff00ffff[NPW]|r ERROR: frame is nil")
-        return
-    end
-    print("|cff00ffff[NPW]|r frame exists")
+    if not frame then return end
 
     -- 从 GUID 获取当前可用的 unit token
-    print("|cff00ffff[NPW]|r About to call GetUnitFromGUID")
     local unit = self:GetUnitFromGUID(guid)
-    print("|cff00ffff[NPW]|r GetUnitFromGUID returned: " .. tostring(unit))
     -- 如果无法获取unit但有目标，直接使用target（副本内必需）
     if not unit and UnitExists("target") then
         unit = "target"
     end
-    if not unit then
-        print("|cff00ffff[NPW]|r ERROR: unit is nil")
-        return
-    end
-    print("|cff00ffff[NPW]|r unit=" .. unit)
+    if not unit then return end
 
     -- 更新安全按钮的宏（使用从GUID解析出的unit token）
-    print("|cff00ffff[NPW]|r About to call UpdateSecureButtonMacros")
     self:UpdateSecureButtonMacros(unit, guid)
-    print("|cff00ffff[NPW]|r UpdateSecureButtonMacros done")
 
     -- 设置轮盘位置
     frame:ClearAllPoints()
@@ -204,12 +191,9 @@ function NPW:ShowWheel(x, y, guid)
     self:UpdateCurrentMarkHighlight(unit)
 
     -- 显示轮盘
-    print("|cff00ffff[NPW]|r About to show frame")
     frame:Show()
-    print("|cff00ffff[NPW]|r frame shown")
 
     self.state.isWheelVisible = true
-    print("|cff00ffff[NPW]|r ShowWheel END")
     self.state.currentGUID = guid
     self.state.currentUnit = unit
 
@@ -328,28 +312,30 @@ end
 function NPW:UpdateCurrentMarkHighlight(unit)
     if not unit then return end
 
-    local currentMark = GetRaidTargetIndex(unit)
+    local success, currentMark = pcall(GetRaidTargetIndex, unit)
+    if not success then return end
+
     local frame = self.state.wheelFrame
     if not frame or not frame.markButtons then return end
 
     for i = 1, 8 do
         local btn = frame.markButtons[i]
         if btn then
-            if i == currentMark then
-                -- 当前标记高亮
-                btn.icon:SetVertexColor(1, 1, 1, 1)
-                btn.highlight:SetAlpha(1)
-                btn:SetScale(1.2)
-            else
-                -- 其他标记正常
-                btn.icon:SetVertexColor(1, 1, 1, 0.6)
-                btn.highlight:SetAlpha(0)
-                btn:SetScale(1)
-            end
+            pcall(function()
+                if i == currentMark then
+                    -- 当前标记高亮
+                    btn.icon:SetVertexColor(1, 1, 1, 1)
+                    btn.highlight:SetAlpha(1)
+                    btn:SetScale(1.2)
+                else
+                    -- 其他标记正常
+                    btn.icon:SetVertexColor(1, 1, 1, 0.6)
+                    btn.highlight:SetAlpha(0)
+                    btn:SetScale(1)
+                end
+            end)
         end
     end
-
-    self:Debug("Current mark highlight updated: " .. tostring(currentMark))
 end
 
 -- 更新轮盘布局（配置更改后调用）
