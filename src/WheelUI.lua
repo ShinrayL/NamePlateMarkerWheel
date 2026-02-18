@@ -169,28 +169,32 @@ end
 -- @param x, y: 屏幕坐标
 -- @param guid: 目标单位的 GUID（主要标识）
 function NPW:ShowWheel(x, y, guid)
-    self:Debug("ShowWheel called, guid=" .. tostring(guid))
-
+    print("|cff00ffff[NPW]|r ShowWheel START")
     local frame = self.state.wheelFrame
     if not frame then
-        self:Debug("ERROR: wheelFrame is nil!")
+        print("|cff00ffff[NPW]|r ERROR: frame is nil")
         return
     end
+    print("|cff00ffff[NPW]|r frame exists")
 
     -- 从 GUID 获取当前可用的 unit token
+    print("|cff00ffff[NPW]|r About to call GetUnitFromGUID")
     local unit = self:GetUnitFromGUID(guid)
+    print("|cff00ffff[NPW]|r GetUnitFromGUID returned: " .. tostring(unit))
     -- 如果无法获取unit但有目标，直接使用target（副本内必需）
     if not unit and UnitExists("target") then
         unit = "target"
-        self:Debug("Using target directly")
     end
     if not unit then
-        self:Debug("ERROR: No unit available")
+        print("|cff00ffff[NPW]|r ERROR: unit is nil")
         return
     end
+    print("|cff00ffff[NPW]|r unit=" .. unit)
 
     -- 更新安全按钮的宏（使用从GUID解析出的unit token）
+    print("|cff00ffff[NPW]|r About to call UpdateSecureButtonMacros")
     self:UpdateSecureButtonMacros(unit, guid)
+    print("|cff00ffff[NPW]|r UpdateSecureButtonMacros done")
 
     -- 设置轮盘位置
     frame:ClearAllPoints()
@@ -200,13 +204,14 @@ function NPW:ShowWheel(x, y, guid)
     self:UpdateCurrentMarkHighlight(unit)
 
     -- 显示轮盘
+    print("|cff00ffff[NPW]|r About to show frame")
     frame:Show()
+    print("|cff00ffff[NPW]|r frame shown")
 
     self.state.isWheelVisible = true
-    self.state.currentGUID = guid  -- 保存 GUID（主要标识）
-    self.state.currentUnit = unit  -- 保存当前 unit token（临时）
-
-    self:Debug("Wheel shown at: " .. x .. ", " .. y .. ", unit=" .. unit)
+    print("|cff00ffff[NPW]|r ShowWheel END")
+    self.state.currentGUID = guid
+    self.state.currentUnit = unit
 
     -- 注册 ESC 关闭和世界点击关闭
     self:RegisterWheelCloseHandlers()
@@ -214,47 +219,8 @@ end
 
 -- 从 GUID 获取可用的 unit token
 function NPW:GetUnitFromGUID(guid)
-    if not guid then
-        self:Debug("GetUnitFromGUID: guid is nil")
-        return nil
-    end
-
-    -- 方法1: 如果当前目标匹配，使用 target（副本内最可靠）
-    if UnitGUID("target") == guid then
-        self:Debug("GetUnitFromGUID: found via target")
-        return "target"
-    end
-
-    -- 方法2: 使用 UnitTokenFromGUID
-    local token = UnitTokenFromGUID(guid)
-    if token and UnitExists(token) then
-        self:Debug("GetUnitFromGUID: found via UnitTokenFromGUID = " .. token)
-        return token
-    end
-
-    -- 方法3: 遍历姓名板查找匹配的GUID
-    local nameplates = C_NamePlate.GetNamePlates()
-    for _, np in ipairs(nameplates) do
-        if np.unit and UnitGUID(np.unit) == guid then
-            self:Debug("GetUnitFromGUID: found via nameplate = " .. np.unit)
-            return np.unit
-        end
-    end
-
-    -- 方法4: 尝试 focus
-    if UnitGUID("focus") == guid then
-        self:Debug("GetUnitFromGUID: found via focus")
-        return "focus"
-    end
-
-    -- 方法5: 如果是玩家自己
-    if UnitGUID("player") == guid then
-        self:Debug("GetUnitFromGUID: found via player")
-        return "player"
-    end
-
-    self:Debug("GetUnitFromGUID: not found")
-    return nil
+    if not guid then return nil end
+    return "target"
 end
 
 -- 注册轮盘关闭处理器
