@@ -7,7 +7,7 @@ echo ========================================
 echo NamePlateMarkerWheel 打包工具
 echo ========================================
 
-set VERSION=1.0.0
+set VERSION=1.1.0
 set FOLDER_NAME=NamePlateMarkerWheel
 set ZIP_NAME=NamePlateMarkerWheel-v%VERSION%.zip
 

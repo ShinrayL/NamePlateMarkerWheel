@@ -33,6 +33,8 @@ function NPW:OnInitialize()
     self:InitConfig()
     -- 创建轮盘UI
     self:CreateWheelFrame()
+    -- 创建配置界面
+    self:CreateConfigPanel()
     -- 注册斜杠命令
     self:RegisterSlashCommands()
 end

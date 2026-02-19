@@ -8,23 +8,36 @@ function NPW:RegisterSlashCommands()
         if cmd == "test" or cmd == "t" then
             -- 测试命令：在屏幕中央显示轮盘（对自己使用player的GUID）
             local playerGUID = UnitGUID("player")
-            self:ShowWheel(GetScreenWidth() / 2, GetScreenHeight() / 2, playerGUID)
-        
+            local scale = UIParent:GetEffectiveScale()
+            local x = (GetScreenWidth() / 2) / scale
+            local y = (GetScreenHeight() / 2) / scale
+            self:ShowWheel(x, y, playerGUID)
+
         elseif cmd == "reset" then
             -- 重置配置
             self:ResetConfig()
+            print("|cff00ffff[NPW]|r 配置已重置")
         elseif cmd == "tar" then
             -- 使用当前目标的GUID来测试
             if UnitExists("target") then
                 local guid = UnitGUID("target")
-                self:ShowWheel(GetScreenWidth() / 2, GetScreenHeight() / 2, guid)
+                local scale = UIParent:GetEffectiveScale()
+                local x = (GetScreenWidth() / 2) / scale
+                local y = (GetScreenHeight() / 2) / scale
+                self:ShowWheel(x, y, guid)
+            else
+                print("|cff00ffff[NPW]|r 没有目标")
             end
         elseif cmd == "config" or cmd == "c" then
-            -- 打开配置界面（如果支持）
-            if Settings and Settings.OpenToCategory then
-                Settings.OpenToCategory("NamePlateMarkerWheel")
+            -- 打开独立配置窗口
+            if self.configPanel then
+                if self.configPanel:IsShown() then
+                    self.configPanel:Hide()
+                else
+                    self.configPanel:Show()
+                end
             else
-                print("|cff00ffff[NPW]|r 配置界面未实现，请直接编辑 SavedVariables")
+                print("|cff00ffff[NPW]|r 配置界面尚未初始化，请重载界面")
             end
         elseif cmd == "debug" or cmd == "d" then
             -- 切换调试模式

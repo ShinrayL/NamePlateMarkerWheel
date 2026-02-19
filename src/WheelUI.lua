@@ -17,7 +17,23 @@ function NPW:CreateWheelFrame()
     -- 背景 - 仅作为视觉元素，不拦截鼠标
     frame.bg = frame:CreateTexture(nil, "BACKGROUND")
     frame.bg:SetAllPoints()
-    frame.bg:SetColorTexture(0, 0, 0, 0.5)
+
+    -- 创建圆形遮罩（将矩形背景裁剪为圆形）
+    frame.mask = frame:CreateMaskTexture()
+    frame.mask:SetAllPoints(frame.bg)
+    frame.mask:SetTexture("Interface\CHARACTERFRAME\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+
+    -- 应用遮罩到背景
+    frame.bg:AddMaskTexture(frame.mask)
+
+    -- 创建圆形边框（增强视觉效果）
+    frame.border = frame:CreateTexture(nil, "BORDER")
+    frame.border:SetAllPoints()
+    frame.border:SetColorTexture(0.8, 0.8, 0.8, 0.6)  -- 更明显的浅灰色边框
+    frame.border:AddMaskTexture(frame.mask)
+
+    -- 设置初始背景颜色
+    frame.bg:SetColorTexture(0.1, 0.1, 0.1, 0.8)
 
     -- 禁用主框架的鼠标捕获，让子按钮直接接收点击
     frame:EnableMouse(false)
@@ -109,7 +125,7 @@ function NPW:CreateMarkButton(parent, index)
     return btn
 end
 
--- 创建清除按钮（集成安全按钮模板）
+-- 创建清除按钮（集成安全按钮模板，与其他标记按钮风格一致）
 function NPW:CreateClearButton(parent)
     local size = self.db.appearance.centerButtonSize
 
@@ -120,36 +136,33 @@ function NPW:CreateClearButton(parent)
     btn:EnableMouse(true)
     btn:RegisterForClicks("LeftButtonDown")
 
-    -- 背景
-    local bg = btn:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints()
-    bg:SetColorTexture(0.3, 0.3, 0.3, 0.8)
-    btn.bg = bg
-
-    -- 图标
+    -- 图标（与其他标记按钮一致，使用 ARTWORK 层级）
     local icon = btn:CreateTexture(nil, "ARTWORK")
     icon:SetAllPoints()
     icon:SetTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
+
+    -- 高亮边框（与其他标记按钮一致）
+    local highlight = btn:CreateTexture(nil, "OVERLAY")
+    highlight:SetAllPoints()
+    highlight:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
+    highlight:SetBlendMode("ADD")
+    highlight:SetAlpha(0)
+    btn.highlight = highlight
 
     -- 设置安全按钮属性
     btn:SetAttribute("type", "macro")
     btn:SetAttribute("macrotext", "/tm 0")
 
-    -- 调试用：点击前检查宏设置
-    btn:SetScript("PreClick", function(self, button)
-     
-    end)
-
-    -- 悬停效果
+    -- 悬停效果（与其他标记按钮一致）
     btn:SetScript("OnEnter", function()
-        bg:SetColorTexture(0.5, 0.2, 0.2, 0.9)
+        highlight:SetAlpha(0.8)
         GameTooltip:SetOwner(btn, "ANCHOR_TOP")
         GameTooltip:SetText("清除标记")
         GameTooltip:Show()
     end)
 
     btn:SetScript("OnLeave", function()
-        bg:SetColorTexture(0.3, 0.3, 0.3, 0.8)
+        highlight:SetAlpha(0)
         GameTooltip:Hide()
     end)
 
@@ -165,12 +178,117 @@ function NPW:CreateClearButton(parent)
     return btn
 end
 
+-- 更新轮盘背景材质
+function NPW:UpdateWheelTexture()
+    local frame = self.state.wheelFrame
+    if not frame or not frame.bg then return end
+
+    -- 确保 appearance 配置存在
+    if not self.db.appearance then
+        self.db.appearance = {}
+    end
+
+    local texture = self.db.appearance.wheelTexture or "circle"
+    local bg = frame.bg
+
+    -- 移除所有遮罩，准备重新应用
+    bg:RemoveMaskTexture(frame.mask)
+
+    if texture == "circle" or texture == "solid" then
+        -- 圆形纯色背景（默认）
+        local color = self.db.appearance.wheelBackgroundColor or {r=0, g=0, b=0, a=0.5}
+        local opacity = self.db.appearance.opacity or 0.8
+        -- 使用 color.a 和 opacity 的乘积作为最终不透明度
+        local finalAlpha = (color.a or 0.5) * opacity
+        bg:SetColorTexture(color.r or 0, color.g or 0, color.b or 0, finalAlpha)
+        -- 应用圆形遮罩
+        bg:AddMaskTexture(frame.mask)
+    elseif texture == "circle-blizzard" or texture == "blizzard" then
+        -- 圆形暴雪对话框背景
+        local opacity = self.db.appearance.opacity or 0.8
+        bg:SetTexture("Interface\\DialogFrame\\UI-DialogBox-Background")
+        bg:SetVertexColor(1, 1, 1, opacity)
+        -- 应用圆形遮罩
+        bg:AddMaskTexture(frame.mask)
+    elseif texture == "circle-tooltip" or texture == "tooltip" then
+        -- 圆形工具提示背景
+        local opacity = self.db.appearance.opacity or 0.8
+        bg:SetTexture("Interface\\Tooltips\\UI-Tooltip-Background")
+        bg:SetVertexColor(1, 1, 1, opacity)
+        -- 应用圆形遮罩
+        bg:AddMaskTexture(frame.mask)
+    elseif texture == "circle-custom" or texture == "custom" then
+        -- 圆形自定义材质
+        local path = self.db.appearance.wheelTexturePath
+        local opacity = self.db.appearance.opacity or 0.8
+        if path and path ~= "" then
+            bg:SetTexture(path)
+            bg:SetVertexColor(1, 1, 1, opacity)
+        else
+            -- 使用默认纯色
+            bg:SetColorTexture(0, 0, 0, opacity)
+        end
+        -- 应用圆形遮罩
+        bg:AddMaskTexture(frame.mask)
+    else
+        -- 未知材质类型，使用默认圆形纯色
+        local opacity = self.db.appearance.opacity or 0.8
+        bg:SetColorTexture(0, 0, 0, opacity)
+        bg:AddMaskTexture(frame.mask)
+    end
+
+    -- 更新边框遮罩和不透明度（确保边框也是圆形）
+    if frame.border then
+        local opacity = self.db.appearance.opacity or 0.8
+        frame.border:RemoveMaskTexture(frame.mask)
+        frame.border:SetColorTexture(0.8, 0.8, 0.8, 0.6 * opacity)
+        frame.border:AddMaskTexture(frame.mask)
+    end
+end
+
+-- 创建轮盘动画组（简化版，使用独立的缩放和淡入淡出）
+function NPW:CreateWheelAnimations(frame)
+    if frame.animationsCreated then return end
+
+    -- 打开动画 - 使用缩放
+    frame.showAnim = frame:CreateAnimationGroup()
+    local scaleIn = frame.showAnim:CreateAnimation("Scale")
+    scaleIn:SetTarget(frame)
+    scaleIn:SetOrigin("CENTER", 0, 0)
+    scaleIn:SetScaleFrom(0.1, 0.1)
+    scaleIn:SetScaleTo(1, 1)
+    scaleIn:SetDuration(0.2)
+    scaleIn:SetSmoothing("OUT")
+
+    -- 关闭动画
+    frame.hideAnim = frame:CreateAnimationGroup()
+    local scaleOut = frame.hideAnim:CreateAnimation("Scale")
+    scaleOut:SetTarget(frame)
+    scaleOut:SetOrigin("CENTER", 0, 0)
+    scaleOut:SetScaleFrom(1, 1)
+    scaleOut:SetScaleTo(0.1, 0.1)
+    scaleOut:SetDuration(0.15)
+    scaleOut:SetSmoothing("IN")
+
+    -- 关闭动画完成回调
+    frame.hideAnim:SetScript("OnFinished", function()
+        frame:Hide()
+        frame:SetScale(1)
+        frame:SetAlpha(1)
+    end)
+
+    frame.animationsCreated = true
+end
+
 -- 显示轮盘
 -- @param x, y: 屏幕坐标
 -- @param guid: 目标单位的 GUID（主要标识）
 function NPW:ShowWheel(x, y, guid)
     local frame = self.state.wheelFrame
-    if not frame then return end
+    if not frame then
+        self:Debug("ShowWheel: frame is nil")
+        return
+    end
 
     -- 从 GUID 获取当前可用的 unit token
     local unit = self:GetUnitFromGUID(guid)
@@ -178,20 +296,72 @@ function NPW:ShowWheel(x, y, guid)
     if not unit and UnitExists("target") then
         unit = "target"
     end
-    if not unit then return end
+    if not unit then
+        self:Debug("ShowWheel: no unit available")
+        return
+    end
+
+    self:Debug("ShowWheel: unit=%s, guid=%s", tostring(unit), tostring(guid))
+
+    -- 检查frame状态
+    local frameWidth, frameHeight = frame:GetSize()
+    self:Debug("ShowWheel: frame size=%s x %s", tostring(frameWidth), tostring(frameHeight))
+    self:Debug("ShowWheel: position=%s, %s", tostring(x), tostring(y))
 
     -- 更新安全按钮的宏（使用从GUID解析出的unit token）
     self:UpdateSecureButtonMacros(unit, guid)
 
-    -- 设置轮盘位置
-    frame:ClearAllPoints()
-    frame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x, y)
-
     -- 更新当前标记高亮
     self:UpdateCurrentMarkHighlight(unit)
 
-    -- 显示轮盘
-    frame:Show()
+    -- 应用当前材质
+    self:UpdateWheelTexture()
+
+    -- 设置位置
+    frame:ClearAllPoints()
+    frame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x, y)
+
+    -- 显示轮盘（带/不带动画）
+    local enableAnimation = self.db.behavior and self.db.behavior.enableAnimation
+    if enableAnimation then
+        -- 确保动画组已创建
+        if not frame.showAnim then
+            self:CreateWheelAnimations(frame)
+        end
+
+        -- 检查动画组是否有效
+        if frame.showAnim and frame.showAnim.Play then
+            -- 停止之前的动画
+            if frame.showAnim:IsPlaying() then
+                frame.showAnim:Stop()
+            end
+
+            -- 更新动画持续时间
+            local animSpeed = self.db.behavior.animationSpeed or 200
+            local duration = animSpeed / 1000
+            local scaleAnim = frame.showAnim:GetAnimations()
+            if scaleAnim and scaleAnim.SetDuration then
+                scaleAnim:SetDuration(duration)
+            end
+
+            -- 显示并播放动画
+            frame:SetAlpha(1)
+            frame:Show()
+            frame.showAnim:Play()
+            self:Debug("ShowWheel: playing show animation, duration=" .. duration)
+        else
+            -- 动画组无效，直接显示
+            frame:SetScale(1)
+            frame:SetAlpha(1)
+            frame:Show()
+            self:Debug("ShowWheel: animation invalid, showing directly")
+        end
+    else
+        frame:SetScale(1)
+        frame:SetAlpha(1)
+        frame:Show()
+        self:Debug("ShowWheel: showing directly (no animation)")
+    end
 
     self.state.isWheelVisible = true
     self.state.currentGUID = guid
@@ -277,8 +447,39 @@ function NPW:HideWheel()
     local frame = self.state.wheelFrame
     if not frame or not frame:IsShown() then return end
 
-    frame:Hide()
+    local enableAnimation = self.db.behavior and self.db.behavior.enableAnimation
+    if enableAnimation then
+        -- 确保动画组已创建
+        if not frame.hideAnim then
+            self:CreateWheelAnimations(frame)
+        end
 
+        -- 检查动画组是否有效
+        if frame.hideAnim and frame.hideAnim.Play then
+            -- 停止打开动画（如果正在播放）
+            if frame.showAnim and frame.showAnim:IsPlaying() then
+                frame.showAnim:Stop()
+            end
+
+            -- 更新动画持续时间（关闭动画稍快）
+            local animSpeed = self.db.behavior.animationSpeed or 200
+            local duration = (animSpeed / 1000) * 0.75
+            local scaleAnim = frame.hideAnim:GetAnimations()
+            if scaleAnim and scaleAnim.SetDuration then
+                scaleAnim:SetDuration(duration)
+            end
+
+            -- 播放关闭动画
+            frame.hideAnim:Play()
+        else
+            -- 动画组无效，直接隐藏
+            frame:Hide()
+        end
+    else
+        frame:Hide()
+    end
+
+    -- 更新状态
     self.state.isWheelVisible = false
     self.state.currentUnit = nil
     self.state.currentGUID = nil
@@ -329,10 +530,20 @@ function NPW:UpdateWheelLayout()
     local frame = self.state.wheelFrame
     if not frame then return end
 
-    local radius = self.db.appearance.wheelRadius
-    local iconSize = self.db.appearance.iconSize
+    -- 确保 appearance 配置存在
+    local appearance = self.db.appearance or {}
+    local radius = appearance.wheelRadius or 25
+    local iconSize = appearance.iconSize or 30
+    local outLineRadius = appearance.outLineRadius or 100
+    local centerButtonSize = appearance.centerButtonSize or 30
 
-    -- 更新标记按钮位置
+    -- 更新主框架大小
+    frame:SetSize(outLineRadius, outLineRadius)
+
+    -- 更新背景材质
+    self:UpdateWheelTexture()
+
+    -- 更新标记按钮位置和大小
     for i = 1, 8 do
         local btn = frame.markButtons[i]
         if btn then
@@ -345,7 +556,7 @@ function NPW:UpdateWheelLayout()
 
     -- 更新中心按钮大小
     if frame.clearButton then
-        frame.clearButton:SetSize(self.db.appearance.centerButtonSize, self.db.appearance.centerButtonSize)
+        frame.clearButton:SetSize(centerButtonSize, centerButtonSize)
     end
 end
 
