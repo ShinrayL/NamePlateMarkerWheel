@@ -2,7 +2,7 @@
 ## Title: Name Plate Marker Wheel
 ## Notes: Double-click or Alt+click nameplate to open a radial wheel for quick raid marker assignment
 ## Author: Claude
-## Version: 1.0.0
+## Version: 1.2.0
 ## SavedVariables: NamePlateMarkerWheelDB
 
 Core.lua

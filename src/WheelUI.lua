@@ -14,6 +14,12 @@ function NPW:CreateWheelFrame()
     frame:SetMovable(false)
     frame:Hide()
 
+    -- 设置默认位置（屏幕中央），战斗中需要使用
+    frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    self.state.lastWheelX = GetScreenWidth() / 2
+    self.state.lastWheelY = GetScreenHeight() / 2
+    self.state.wheelPositionSet = true
+
     -- 背景 - 仅作为视觉元素，不拦截鼠标
     frame.bg = frame:CreateTexture(nil, "BACKGROUND")
     frame.bg:SetAllPoints()
@@ -49,7 +55,10 @@ function NPW:CreateWheelFrame()
     frame.clearButton = self:CreateClearButton(frame)
 
     self.state.wheelFrame = frame
- 
+
+    -- 预创建外部点击检测帧（必须在非战斗中完成）
+    self:CreateClickOutFrames()
+
     return frame
 end
 
@@ -111,6 +120,11 @@ function NPW:CreateMarkButton(parent, index)
 
     -- 点击后关闭轮盘（使用 PostClick 确保宏先执行）
     btn:SetScript("PostClick", function()
+        -- 如果配置为同步队列，则将队列推进到该标记的下一个
+        if self.db.behavior.syncQueueWithWheel then
+            self:SetMarkQueueToIndex(index)
+        end
+
         if self.db.behavior.closeOnMarkSet then
             C_Timer.After(0.1, function()
                 self:HideWheel()
@@ -290,36 +304,52 @@ function NPW:ShowWheel(x, y, guid)
         return
     end
 
+    -- 战斗中不能执行某些操作
+    local inCombat = InCombatLockdown()
+
     -- 从 GUID 获取当前可用的 unit token
     local unit = self:GetUnitFromGUID(guid)
     -- 如果无法获取unit但有目标，直接使用target（副本内必需）
     if not unit and UnitExists("target") then
         unit = "target"
     end
-    if not unit then
-        self:Debug("ShowWheel: no unit available")
-        return
-    end
 
-    self:Debug("ShowWheel: unit=%s, guid=%s", tostring(unit), tostring(guid))
+    self:Debug("ShowWheel: unit=%s, guid=%s, inCombat=%s", tostring(unit), tostring(guid), tostring(inCombat))
 
     -- 检查frame状态
     local frameWidth, frameHeight = frame:GetSize()
     self:Debug("ShowWheel: frame size=%s x %s", tostring(frameWidth), tostring(frameHeight))
     self:Debug("ShowWheel: position=%s, %s", tostring(x), tostring(y))
 
-    -- 更新安全按钮的宏（使用从GUID解析出的unit token）
+    -- 更新安全按钮的宏（战斗中会跳过）
     self:UpdateSecureButtonMacros(unit, guid)
 
     -- 更新当前标记高亮
-    self:UpdateCurrentMarkHighlight(unit)
+    if unit then
+        self:UpdateCurrentMarkHighlight(unit)
+    end
 
-    -- 应用当前材质
+    -- 应用当前材质（战斗中允许）
     self:UpdateWheelTexture()
 
-    -- 设置位置
-    frame:ClearAllPoints()
-    frame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x, y)
+    -- 设置位置（战斗中不允许 ClearAllPoints/SetPoint）
+    if not inCombat then
+        -- 非战斗状态下保存位置并应用
+        frame:ClearAllPoints()
+        frame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", x, y)
+        -- 保存最后位置用于战斗中
+        self.state.lastWheelX = x
+        self.state.lastWheelY = y
+        self.state.wheelPositionSet = true
+    else
+        -- 战斗中：如果位置从未设置过，无法显示轮盘
+        if not self.state.wheelPositionSet then
+            self:Debug("ShowWheel: cannot show wheel in combat - position not preset")
+            -- 可以选择显示一个提示信息
+            return
+        end
+        self:Debug("ShowWheel: in combat, using preset position")
+    end
 
     -- 显示轮盘（带/不带动画）
     local enableAnimation = self.db.behavior and self.db.behavior.enableAnimation
@@ -377,6 +407,69 @@ function NPW:GetUnitFromGUID(guid)
     return "target"
 end
 
+-- 预创建外部点击检测帧（必须在非战斗中完成）
+function NPW:CreateClickOutFrames()
+    if self.clickOutFrames then return end
+
+    self.clickOutFrames = {}
+    for i = 1, 4 do
+        local f = CreateFrame("Frame", "NPW_ClickOut" .. i, UIParent)
+        f:SetFrameStrata("BACKGROUND")
+        f:SetFrameLevel(1)
+        f:EnableMouse(true)
+        f:SetScript("OnMouseDown", function()
+            if self:IsWheelVisible() then
+                self:HideWheel()
+            end
+        end)
+        f:Hide()
+        self.clickOutFrames[i] = f
+    end
+end
+
+-- 更新外部点击检测帧位置和显示（战斗中允许Show/Hide，但不能SetPoint）
+function NPW:UpdateClickOutFrames()
+    if not self.clickOutFrames then return end
+    if InCombatLockdown() then return end -- 战斗中不更新位置
+
+    local frame = self.state.wheelFrame
+    if not frame then return end
+
+    local screenW, screenH = GetScreenWidth(), GetScreenHeight()
+    local left, right, top, bottom = frame:GetLeft(), frame:GetRight(), frame:GetTop(), frame:GetBottom()
+    if not left or not right or not top or not bottom then return end
+
+    -- 左边缘
+    self.clickOutFrames[1]:ClearAllPoints()
+    self.clickOutFrames[1]:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 0, 0)
+    self.clickOutFrames[1]:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMLEFT", left, 0)
+
+    -- 右边缘
+    self.clickOutFrames[2]:ClearAllPoints()
+    self.clickOutFrames[2]:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", right, 0)
+    self.clickOutFrames[2]:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 0, 0)
+
+    -- 上边缘（轮盘上方）
+    self.clickOutFrames[3]:ClearAllPoints()
+    self.clickOutFrames[3]:SetPoint("TOPLEFT", UIParent, "TOPLEFT", left, 0)
+    self.clickOutFrames[3]:SetPoint("BOTTOMRIGHT", UIParent, "TOPLEFT", right, top - screenH)
+
+    -- 下边缘（轮盘下方）
+    self.clickOutFrames[4]:ClearAllPoints()
+    self.clickOutFrames[4]:SetPoint("TOPLEFT", UIParent, "TOPLEFT", left, bottom)
+    self.clickOutFrames[4]:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 0, 0)
+end
+
+-- 显示外部点击检测帧
+function NPW:ShowClickOutFrames()
+    if not self.clickOutFrames then return end
+    for i = 1, 4 do
+        if self.clickOutFrames[i] then
+            self.clickOutFrames[i]:Show()
+        end
+    end
+end
+
 -- 注册轮盘关闭处理器
 function NPW:RegisterWheelCloseHandlers()
     -- ESC 键关闭
@@ -390,54 +483,16 @@ function NPW:RegisterWheelCloseHandlers()
     end
     self.escHandler:SetPropagateKeyboardInput(true)
 
-    -- 点击外部关闭：使用低层级的透明帧只覆盖轮盘外部区域
-    -- 注意：不能使用全屏覆盖，否则会拦截安全按钮的点击
-    C_Timer.After(0.1, function()
+    -- 点击外部关闭：延迟一帧让轮盘位置确定后再设置
+    C_Timer.After(0.05, function()
         if not self:IsWheelVisible() then return end
 
-        -- 创建4个边缘帧来包围轮盘（形成一个"洞"让轮盘可以接收点击）
-        if not self.clickOutFrames then
-            self.clickOutFrames = {}
-            for i = 1, 4 do
-                local f = CreateFrame("Frame")
-                f:SetFrameStrata("BACKGROUND")
-                f:SetFrameLevel(1)
-                f:EnableMouse(true)
-                f:SetScript("OnMouseDown", function()
-                    if self:IsWheelVisible() then
-                        self:HideWheel()
-                    end
-                end)
-                self.clickOutFrames[i] = f
-            end
-        end
+        -- 预创建帧（如果还没创建）
+        self:CreateClickOutFrames()
 
-        local frame = self.state.wheelFrame
-        if not frame then return end
-
-        local scale = UIParent:GetEffectiveScale()
-        local screenW, screenH = GetScreenWidth(), GetScreenHeight()
-        local left, right, top, bottom = frame:GetLeft(), frame:GetRight(), frame:GetTop(), frame:GetBottom()
-
-        -- 左边缘
-        self.clickOutFrames[1]:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 0, 0)
-        self.clickOutFrames[1]:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMLEFT", left, 0)
-        self.clickOutFrames[1]:Show()
-
-        -- 右边缘
-        self.clickOutFrames[2]:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", right, 0)
-        self.clickOutFrames[2]:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 0, 0)
-        self.clickOutFrames[2]:Show()
-
-        -- 上边缘（轮盘上方）
-        self.clickOutFrames[3]:SetPoint("TOPLEFT", UIParent, "TOPLEFT", left, 0)
-        self.clickOutFrames[3]:SetPoint("BOTTOMRIGHT", UIParent, "TOPLEFT", right, top - screenH)
-        self.clickOutFrames[3]:Show()
-
-        -- 下边缘（轮盘下方）
-        self.clickOutFrames[4]:SetPoint("TOPLEFT", UIParent, "TOPLEFT", left, bottom)
-        self.clickOutFrames[4]:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 0, 0)
-        self.clickOutFrames[4]:Show()
+        -- 更新位置并显示
+        self:UpdateClickOutFrames()
+        self:ShowClickOutFrames()
     end)
 end
 
@@ -447,8 +502,11 @@ function NPW:HideWheel()
     local frame = self.state.wheelFrame
     if not frame or not frame:IsShown() then return end
 
+    local inCombat = InCombatLockdown()
     local enableAnimation = self.db.behavior and self.db.behavior.enableAnimation
-    if enableAnimation then
+
+    -- 战斗中禁用动画（不能创建动画组）
+    if enableAnimation and not inCombat then
         -- 确保动画组已创建
         if not frame.hideAnim then
             self:CreateWheelAnimations(frame)
@@ -476,6 +534,7 @@ function NPW:HideWheel()
             frame:Hide()
         end
     else
+        -- 无动画或战斗中，直接隐藏
         frame:Hide()
     end
 

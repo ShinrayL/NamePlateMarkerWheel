@@ -57,6 +57,16 @@ function NPW:RegisterSlashCommands()
             self.db = self:DeepCopy(self.defaults)
             NamePlateMarkerWheelDB = { profile = self.db }
             print("|cff00ffff[NPW]|r 重置完成，请重载界面 (/reload)")
+        elseif cmd == "resetqueue" or cmd == "rq" then
+            -- 重置标记队列
+            self:ResetMarkQueue()
+            print("|cff00ffff[NPW]|r 标记队列已重置 (从1号标记开始)")
+        elseif cmd == "queue" or cmd == "q" then
+            -- 查看队列状态
+            local currentMark = self.state.combatMarkQueue[self.state.combatMarkIndex]
+            print("|cff00ffff[NPW]|r 标记队列状态:")
+            print("  当前队列位置: " .. self.state.combatMarkIndex .. " (标记 " .. currentMark .. ")")
+            print("  战斗中点击将设置标记: " .. currentMark)
         else
             print("|cff00ffff[NPW]|r 命令列表:")
             print("  /npw test - 测试轮盘显示")
@@ -65,6 +75,8 @@ function NPW:RegisterSlashCommands()
             print("  /npw config - 打开配置")
             print("  /npw debug - 切换调试模式")
             print("  /npw status - 查看状态")
+            print("  /npw queue - 查看标记队列状态")
+            print("  /npw resetqueue - 重置标记队列")
             print("  /npw forcereset - 完全重置（需重载）")
         end
     end

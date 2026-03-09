@@ -25,6 +25,23 @@ NPW.defaults = {
         enableSound = false,         -- 启用音效
         closeOnMarkSet = true,      -- 设置标记后关闭
         enableAnimation = true,     -- 启用打开/关闭动画
+        syncQueueWithWheel = false, -- 轮盘标记后同步队列位置
+    },
+
+    -- 战斗快捷标记键位配置（8个标记的修饰键+点击组合）
+    -- 可选修饰键: "ALT", "CTRL", "SHIFT", "ALT-CTRL", "ALT-SHIFT", "CTRL-SHIFT", "ALT-CTRL-SHIFT", ""
+    -- 可选按键: "BUTTON1"(左键), "BUTTON2"(右键), "BUTTON3"(中键)
+    combatBindings = {
+        enabled = true,             -- 启用战斗快捷标记
+        [1] = { modifier = "ALT",       button = "BUTTON1" },  -- 星星
+        [2] = { modifier = "CTRL",      button = "BUTTON1" },  -- 大饼
+        [3] = { modifier = "SHIFT",     button = "BUTTON1" },  -- 菱形
+        [4] = { modifier = "ALT",       button = "BUTTON2" },  -- 三角
+        [5] = { modifier = "CTRL",      button = "BUTTON2" },  -- 月亮
+        [6] = { modifier = "SHIFT",     button = "BUTTON2" },  -- 方块
+        [7] = { modifier = "ALT-CTRL",  button = "BUTTON1" },  -- 叉
+        [8] = { modifier = "ALT-SHIFT", button = "BUTTON1" },  -- 骷髅
+        clear = { modifier = "ALT",  button = "BUTTON3" },     -- 清除
     },
 
     -- 调试 (强制开启以排查问题)
@@ -76,6 +93,18 @@ function NPW:ValidateConfig()
         for k, v in pairs(self.defaults.behavior) do
             if self.db.behavior[k] == nil then
                 self.db.behavior[k] = self:DeepCopy(v)
+            end
+        end
+    end
+
+    -- 确保 combatBindings 存在
+    if not self.db.combatBindings then
+        self.db.combatBindings = self:DeepCopy(self.defaults.combatBindings)
+    else
+        -- 检查所有 combatBindings 子键
+        for k, v in pairs(self.defaults.combatBindings) do
+            if self.db.combatBindings[k] == nil then
+                self.db.combatBindings[k] = self:DeepCopy(v)
             end
         end
     end
@@ -684,6 +713,159 @@ function NPW:CreateConfigPanel()
     closeOnMarkCheckbox:SetPoint("TOPLEFT", content, "TOPLEFT", currentX, currentY)
     currentY = currentY - 60
 
+    -- ========== 战斗快捷标记设置 ==========
+    currentY = CreateSectionHeader(content, "战斗快捷标记", currentY)
+
+    -- 启用战斗快捷标记复选框
+    local combatBindEnabledCheckbox = CreateCheckbox(
+        content,
+        "启用战斗快捷标记",
+        "在战斗中直接使用修饰键+点击设置标记（无需唤出轮盘）",
+        function() return self:GetConfig("combatBindings.enabled") end,
+        function(val)
+            self:SetConfig("combatBindings.enabled", val)
+            -- 重新应用绑定
+            if val then
+                self:ReapplyCombatBindings()
+            else
+                self:ClearOverrideBindings()
+            end
+        end
+    )
+    combatBindEnabledCheckbox:SetPoint("TOPLEFT", content, "TOPLEFT", currentX, currentY)
+    currentY = currentY - 40
+
+    -- 标记名称
+    local markNames = { "星星", "大饼", "菱形", "三角", "月亮", "方块", "叉", "骷髅", "清除" }
+
+    -- 修饰键选项
+    local modifierOptions = {
+        { text = "无", value = "" },
+        { text = "Alt", value = "ALT" },
+        { text = "Ctrl", value = "CTRL" },
+        { text = "Shift", value = "SHIFT" },
+        { text = "Alt+Ctrl", value = "ALT-CTRL" },
+        { text = "Alt+Shift", value = "ALT-SHIFT" },
+        { text = "Ctrl+Shift", value = "CTRL-SHIFT" },
+        { text = "Alt+Ctrl+Shift", value = "ALT-CTRL-SHIFT" },
+    }
+
+    -- 按键选项
+    local buttonOptions = {
+        { text = "左键", value = "BUTTON1" },
+        { text = "右键", value = "BUTTON2" },
+        { text = "中键", value = "BUTTON3" },
+    }
+
+    -- 创建单个标记的绑定设置行
+    local function CreateBindRow(parent, y, markIndex, markName)
+        local rowHeight = 30
+
+        -- 标签
+        local label = parent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+        label:SetPoint("TOPLEFT", parent, "TOPLEFT", currentX, y)
+        label:SetWidth(50)
+        label:SetText(markName)
+
+        -- 修饰键下拉
+        local modDropdown = CreateDropdown(
+            parent,
+            "修饰键",
+            "",
+            modifierOptions,
+            function()
+                local cfg = self:GetConfig("combatBindings")
+                local defaultCfg = self.defaults.combatBindings
+                if markIndex == 0 then
+                    return cfg and cfg.clear and cfg.clear.modifier or defaultCfg.clear.modifier
+                else
+                    return cfg and cfg[markIndex] and cfg[markIndex].modifier or defaultCfg[markIndex].modifier
+                end
+            end,
+            function(val)
+                local cfg = self:GetConfig("combatBindings")
+                if not cfg then return end
+                if markIndex == 0 then
+                    if not cfg.clear then cfg.clear = {} end
+                    cfg.clear.modifier = val
+                else
+                    if not cfg[markIndex] then cfg[markIndex] = {} end
+                    cfg[markIndex].modifier = val
+                end
+                -- 立即应用绑定
+                if cfg.enabled then
+                    self:ReapplyCombatBindings()
+                end
+            end
+        )
+        modDropdown:SetPoint("TOPLEFT", label, "TOPRIGHT", 5, 10)
+        modDropdown:SetWidth(110)
+
+        -- 按键下拉
+        local btnDropdown = CreateDropdown(
+            parent,
+            "按键",
+            "",
+            buttonOptions,
+            function()
+                local cfg = self:GetConfig("combatBindings")
+                local defaultCfg = self.defaults.combatBindings
+                if markIndex == 0 then
+                    return cfg and cfg.clear and cfg.clear.button or defaultCfg.clear.button
+                else
+                    return cfg and cfg[markIndex] and cfg[markIndex].button or defaultCfg[markIndex].button
+                end
+            end,
+            function(val)
+                local cfg = self:GetConfig("combatBindings")
+                if not cfg then return end
+                if markIndex == 0 then
+                    if not cfg.clear then cfg.clear = {} end
+                    cfg.clear.button = val
+                else
+                    if not cfg[markIndex] then cfg[markIndex] = {} end
+                    cfg[markIndex].button = val
+                end
+                -- 立即应用绑定
+                if cfg.enabled then
+                    self:ReapplyCombatBindings()
+                end
+            end
+        )
+        btnDropdown:SetPoint("TOPLEFT", modDropdown, "TOPRIGHT", 10, 0)
+        btnDropdown:SetWidth(80)
+
+        return rowHeight
+    end
+
+    -- 创建8个标记的绑定设置
+    for i = 1, 8 do
+        CreateBindRow(content, currentY, i, markNames[i] .. "(" .. i .. ")")
+        currentY = currentY - 35
+    end
+
+    -- 清除标记的绑定设置
+    CreateBindRow(content, currentY, 0, "清除")
+    currentY = currentY - 50
+
+    -- 重置绑定按钮
+    local resetBindBtn = CreateFrame("Button", nil, content, "UIPanelButtonTemplate")
+    resetBindBtn:SetSize(120, 22)
+    resetBindBtn:SetText("重置为默认")
+    resetBindBtn:SetPoint("TOPLEFT", content, "TOPLEFT", currentX, currentY)
+    resetBindBtn:SetScript("OnClick", function()
+        -- 重置为默认配置
+        self.db.combatBindings = self:DeepCopy(self.defaults.combatBindings)
+        -- 重新应用绑定
+        if self.db.combatBindings.enabled then
+            self:ReapplyCombatBindings()
+        end
+        -- 刷新面板
+        self:RefreshConfigPanel()
+        print("|cff00ffff[NPW]|r 战斗快捷标记已重置为默认值")
+    end)
+    currentY = currentY - 60
+
     -- ========== 调试设置 ==========
     currentY = CreateSectionHeader(content, "调试", currentY)
 
@@ -717,6 +899,7 @@ function NPW:CreateConfigPanel()
         { type = "slider", key = "behavior.animationSpeed", control = animSpeedSlider.slider, valueText = animSpeedSlider.valueText },
         { type = "checkbox", key = "behavior.enableAnimation", control = enableAnimCheckbox },
         { type = "checkbox", key = "behavior.closeOnMarkSet", control = closeOnMarkCheckbox },
+        { type = "checkbox", key = "combatBindings.enabled", control = combatBindEnabledCheckbox },
         { type = "checkbox", key = "debug", control = debugCheckbox },
     }
 
