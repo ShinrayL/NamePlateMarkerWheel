@@ -1,0 +1,41 @@
+{
+	"folders": [
+		{
+			"name": "NamePlateMarkerWheel",
+			"path": "."
+		}
+	],
+	"settings": {
+		"Lua.runtime.version": "Lua 5.1",
+		"Lua.runtime.builtin": {
+			"basic": "disable",
+			"debug": "disable",
+			"io": "disable",
+			"math": "disable",
+			"os": "disable",
+			"package": "disable",
+			"string": "disable",
+			"table": "disable",
+			"utf8": "disable"
+		},
+		"Lua.workspace.library": [
+			"~\\.vscode\\extensions\\ketho.wow-api-0.22.3\\Annotations\\Core"
+		],
+		"Lua.diagnostics.globals": [
+			"UIParent",
+			"GameTooltip",
+			"Settings",
+			"SlashCmdList",
+			"WorldFrame",
+			"SOUNDKIT",
+			"UIDropDownMenu_Initialize",
+			"UIDropDownMenu_SetSelectedValue",
+			"UIDropDownMenu_SetText",
+			"StaticPopupDialogs",
+			"UIDropDownMenu_AddButton",
+			"StaticPopup_Show",
+			"UIDropDownMenu_CreateInfo"
+		],
+		"Lua.type.weakUnionCheck": true
+	}
+}

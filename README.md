@@ -1,5 +1,11 @@
 # NamePlateMarkerWheel
 
+<p align="center">
+  <img src="logo/logo.png" alt="NamePlateMarkerWheel Logo" width="500">
+</p>
+
+[English](README_EN.md) | 简体中文
+
 魔兽世界快速标记插件 - 通过双击或 Alt+点击姓名板，弹出径向轮盘快速设置团队标记。
 
 ![功能演示](https://user.shields.io/badge/WoW-12.0%2B-blue)
