@@ -26,6 +26,7 @@ NPW.defaults = {
         closeOnMarkSet = true,      -- 设置标记后关闭
         enableAnimation = true,     -- 启用打开/关闭动画
         syncQueueWithWheel = false, -- 轮盘标记后同步队列位置
+        enableDoubleClick = true,   -- 启用双击唤出轮盘
     },
 
     -- 战斗快捷标记键位配置（8个标记的修饰键+点击组合）
@@ -657,6 +658,19 @@ function NPW:CreateConfigPanel()
     -- ========== 行为设置 ==========
     currentY = CreateSectionHeader(content, "行为设置", currentY)
 
+    -- 启用双击复选框
+    local enableDoubleClickCheckbox = CreateCheckbox(
+        content,
+        "启用双击唤出轮盘",
+        "双击目标唤出标记轮盘（与Alt+点击独立）",
+        function() return self:GetConfig("behavior.enableDoubleClick") end,
+        function(val)
+            self:SetConfig("behavior.enableDoubleClick", val)
+        end
+    )
+    enableDoubleClickCheckbox:SetPoint("TOPLEFT", content, "TOPLEFT", currentX, currentY)
+    currentY = currentY - 35
+
     -- 双击间隔滑块
     local doubleClickSlider = CreateSlider(
         content,
@@ -897,6 +911,7 @@ function NPW:CreateConfigPanel()
         { type = "slider", key = "appearance.centerButtonSize", control = centerBtnSlider.slider, valueText = centerBtnSlider.valueText },
         { type = "slider", key = "behavior.doubleClickInterval", control = doubleClickSlider.slider, valueText = doubleClickSlider.valueText },
         { type = "slider", key = "behavior.animationSpeed", control = animSpeedSlider.slider, valueText = animSpeedSlider.valueText },
+        { type = "checkbox", key = "behavior.enableDoubleClick", control = enableDoubleClickCheckbox },
         { type = "checkbox", key = "behavior.enableAnimation", control = enableAnimCheckbox },
         { type = "checkbox", key = "behavior.closeOnMarkSet", control = closeOnMarkCheckbox },
         { type = "checkbox", key = "combatBindings.enabled", control = combatBindEnabledCheckbox },

@@ -130,8 +130,8 @@ function NPW:ProcessClick(targetGUID)
     if isAltClick then
         shouldTrigger = true
         triggerMethod = "Alt+Click"
-    -- 检测2：双击（同一目标，时间间隔内）
-    elseif lastGUID == targetGUID then
+    -- 检测2：双击（同一目标，时间间隔内）- 需要启用双击功能
+    elseif self.db.behavior.enableDoubleClick and lastGUID == targetGUID then
         local timeDiff = currentTime - lastTime
         if timeDiff <= self.constants.DOUBLE_CLICK_THRESHOLD then
             shouldTrigger = true
